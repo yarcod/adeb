@@ -6,19 +6,21 @@ VERSION=v0.99h
 
 spath="$(dirname "$(readlink -f "$0")")"
 # spath=$( cd "$(dirname "$0")" ; pwd -P )
-curdir=$( pwd -P )
+curdir=$(pwd -P)
 source $spath/utils/support
 source $spath/utils/banners
 source $spath/utils/remote
 
 # Set default vars
-DISTRO=buster; ARCH=arm64
+DISTRO=bullseye
+ARCH=arm64
 ADB="adb"
 REMOTE="adb"
-FULL=0				# Default to a minimal install
-DOWNLOAD=1			# Default to downloading from web
-SKIP_DEVICE=0			# Skip device preparation
-INSTALL_BCC=0			# Decide if BCC is to be installed
+FULL=0        # Default to a minimal install
+DOWNLOAD=1    # Default to downloading from web
+SKIP_DEVICE=0 # Skip device preparation
+INSTALL_BCC=0 # Decide if BCC is to be installed
+DEBIAN_URL=http://ftp.us.debian.org/debian/
 
 # Default packages
 PACKAGES=""
@@ -27,44 +29,133 @@ DEFAULT_PACKAGES="bash ca-certificates apt net-tools iputils-ping procps vim"
 EXTRA_FILES="none"
 
 config_full_build() {
-	for f in $(ls $spath/packages); do source $spath/packages/$f; done;
+	for f in $(ls $spath/packages); do source $spath/packages/$f; done
 }
 
 # Parse command line parameters
-if [ $# -lt 1 ]; then usage; fi; POSITIONAL=()
-while [[ $# -gt 0 ]]; do key="$1";
+if [ $# -lt 1 ]; then usage; fi
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+	key="$1"
 
-# If its shell mode, any future args become shell's args
-if [ "x$ASHELL" == "x1" ]; then
-	if [ -z "$SHELL_ARGS" ]; then
-		SHELL_ARGS=$key
-	else
-		SHELL_ARGS="$SHELL_ARGS $key"
+	# If its shell mode, any future args become shell's args
+	if [ "x$ASHELL" == "x1" ]; then
+		if [ -z "$SHELL_ARGS" ]; then
+			SHELL_ARGS=$key
+		else
+			SHELL_ARGS="$SHELL_ARGS $key"
+		fi
+		shift || true
+		continue
 	fi
-	shift || true; continue
-fi
 
-case $key in
-    shell) ASHELL=1;     shift || true;     ;;
-    remove) REMOVE=1;     shift || true;     ;;
-    git-pull) GIT_PULL=1; shift || true; ;;
-    pull) PULL=1; shift || true; break	;;
-    push) PUSH=1; shift || true; break	;;
-    prepare) PREPARE=1;  shift || true;    ;;
-    --full) FULL=1; config_full_build; shift || true; ;;
-    --arch) ARCH=$2; shift || true; shift || true; ;;
-    --archive) DOWNLOAD=0; TARF=$2; shift || true; shift || true; ;;
-    --bcc) FULL=1; source $spath/packages/bcc; shift || true;     ;;
-    --tempdir) TDIR="$2"; shift || true;     shift || true;     ;;
-    --build) DOWNLOAD=0;  shift || true;     ;;
-    --buildtar) BTAR=1; DOWNLOAD=0; TARDIR="$2"; shift || true;     shift || true;     ;;
-    --device|-s) ADB="$ADB -s $2"; shift || true; shift || true; ;;
-    --ssh) REMOTE="ssh"; SSH_URI="$2"; shift || true; shift || true; ;;
-    --sshpass) SSHPASS="sshpass -p$2"; shift || true; shift || true; ;;
-    --build-image) BI=1; BUILD_IMAGEF=$2; SKIP_DEVICE=1; DOWNLOAD=0; shift || true; shift || true; ;;
-    --debug) set -x; shift || true; ;;
-    *) c_error "Unknown option ($1)"; usage; ;;
-esac
+	case $key in
+	shell)
+		ASHELL=1
+		shift || true
+		;;
+	remove)
+		REMOVE=1
+		shift || true
+		;;
+	git-pull)
+		GIT_PULL=1
+		shift || true
+		;;
+	pull)
+		PULL=1
+		shift || true
+		break
+		;;
+	push)
+		PUSH=1
+		shift || true
+		break
+		;;
+	prepare)
+		PREPARE=1
+		shift || true
+		;;
+	--full)
+		FULL=1
+		config_full_build
+		shift || true
+		;;
+	--arch)
+		ARCH=$2
+		shift || true
+		shift || true
+		;;
+	--archive)
+		DOWNLOAD=0
+		TARF=$2
+		shift || true
+		shift || true
+		;;
+	--bcc)
+		FULL=1
+		source $spath/packages/bcc
+		shift || true
+		;;
+	--tempdir)
+		TDIR="$2"
+		shift || true
+		shift || true
+		;;
+	--build)
+		DOWNLOAD=0
+		shift || true
+		;;
+	--buildtar)
+		BTAR=1
+		DOWNLOAD=0
+		TARDIR="$2"
+		shift || true
+		shift || true
+		;;
+	--device | -s)
+		ADB="$ADB -s $2"
+		shift || true
+		shift || true
+		;;
+	--ssh)
+		REMOTE="ssh"
+		SSH_URI="$2"
+		shift || true
+		shift || true
+		;;
+	--sshpass)
+		SSHPASS="sshpass -p$2"
+		shift || true
+		shift || true
+		;;
+	--build-image)
+		BI=1
+		BUILD_IMAGEF=$2
+		SKIP_DEVICE=1
+		DOWNLOAD=0
+		shift || true
+		shift || true
+		;;
+	--debug)
+		set -x
+		shift || true
+		;;
+	--distro)
+		DISTRO="$2"
+		shift || true
+		shift || true
+		;;
+	--mirror)
+		DEBIAN_URL="$2"
+		shift || true
+		shift || true
+		;;
+	*)
+		c_error "Unknown option ($1)"
+		usage
+		;;
+	esac
 done
 
 [ -z $ASHELL ] && box_out "adeb: $VERSION"
@@ -122,17 +213,21 @@ fi
 
 if [ ! -z "$REMOVE" ]; then
 	die_if_no_androdeb "Nothing to remove."
-	remote_shell /data/androdeb/device-umount-all || true;
-	remote_shell rm -rf /data/androdeb; exit 0; fi
+	remote_shell /data/androdeb/device-umount-all || true
+	remote_shell rm -rf /data/androdeb
+	exit 0
+fi
 
 ##########################################################
 #  SHELL
 ##########################################################
 if [ ! -z ${ASHELL+x} ]; then
-	set +e; remote_shell ls /data/androdeb/debian/.bashrc > /dev/null 2>&1
+	set +e
+	remote_shell ls /data/androdeb/debian/.bashrc >/dev/null 2>&1
 	if [ $? -ne 0 ]; then
-	   die 2 "Device doesn't have an androdeb environment, run \"./androdeb prepare\" first";
-	fi; set -e
+		die 2 "Device doesn't have an androdeb environment, run \"./androdeb prepare\" first"
+	fi
+	set -e
 
 	if [ ! -z ${SHELL_ARGS+x} ]; then
 		# Explanation of quotes:
@@ -148,11 +243,12 @@ if [ ! -z ${ASHELL+x} ]; then
 fi
 
 ##########################################################
-#  PREPARE 
+#  PREPARE
 ##########################################################
 
 function do_cleanup() {
-	rm -rf $TDIR/*; if [ $MKTEMP -eq 1 ]; then rm -rf $TDIR; fi
+	rm -rf $TDIR/*
+	if [ $MKTEMP -eq 1 ]; then rm -rf $TDIR; fi
 }
 
 function all_done_banner() {
@@ -160,15 +256,15 @@ function all_done_banner() {
 }
 
 function detect_repo_url() {
-	ADEB_REPO_URL=`cd $spath && git config -l | grep -m1 remote | grep url | sed -e "s/.*url=//" \
-		 -e "s/.*@//"  \
-		 -e "s/https:\/\///" \
-		 -e "s/:/\//"  \
-		 -e "s/\.git$//"`"/"
+	ADEB_REPO_URL=$(cd $spath && git config -l | grep -m1 remote | grep url | sed -e "s/.*url=//" \
+		-e "s/.*@//" \
+		-e "s/https:\/\///" \
+		-e "s/:/\//" \
+		-e "s/\.git$//")"/"
 	c_info "Detected URL: $ADEB_REPO_URL"
 }
 
-function check_repo_url () {
+function check_repo_url() {
 	if [ -z $ADEB_REPO_URL ]; then
 		c_info "No repository URL provided in enviromnent. Attempting to auto-detect it"
 		detect_repo_url
@@ -190,26 +286,35 @@ if [ ! -z "$TARF" ] && [ ! -f $TARF ] && [ -z "$DOWNLOAD" ]; then die 5 "archive
 print_prepare_banner
 
 # Where do we want to store temporary files
-MKTEMP=0; if [[ -z ${TDIR+x} ]]  || [[ ! -d "${TDIR}" ]]; then
-	TDIR=`mktemp -d`; MKTEMP=1; fi
+MKTEMP=0
+if [[ -z ${TDIR+x} ]] || [[ ! -d "${TDIR}" ]]; then
+	TDIR=$(mktemp -d)
+	MKTEMP=1
+fi
 rm -rf $TDIR/*
-TDIR_ABS=$( cd "$TDIR" ; pwd -P )
+TDIR_ABS=$(
+	cd "$TDIR"
+	pwd -P
+)
 
 if [ $DOWNLOAD -eq 1 ]; then
-   c_info "Downloading Androdeb from the web..."; c_info ""
+	c_info "Downloading Androdeb from the web..."
+	c_info ""
 
-   # Github dropped tar gz support! ##?#??#! Now we've to zip everything.
-   check_repo_url
+	# Github dropped tar gz support! ##?#??#! Now we've to zip everything.
+	check_repo_url
 
-   curl -L https://$ADEB_REPO_URL/releases/download/$VERSION/$FNAME --output $TDIR_ABS/$FNAME ||
-		   die 9 "Failed to download adeb release."
+	curl -L https://$ADEB_REPO_URL/releases/download/$VERSION/$FNAME --output $TDIR_ABS/$FNAME ||
+		die 9 "Failed to download adeb release."
 
-   unzip -e $TDIR_ABS/$FNAME -d $TDIR_ABS/ ||
-		   die 10 "Failed to download adeb release. Double check the ADEB_REPO_URL value."
-   TARF=$TDIR_ABS/$FNAME_UZ
+	unzip -e $TDIR_ABS/$FNAME -d $TDIR_ABS/ ||
+		die 10 "Failed to download adeb release. Double check the ADEB_REPO_URL value."
+	TARF=$TDIR_ABS/$FNAME_UZ
 fi
 
-OUT_TMP=$TDIR/debian; rm -rf $OUT_TMP; mkdir -p $OUT_TMP
+OUT_TMP=$TDIR/debian
+rm -rf $OUT_TMP
+mkdir -p $OUT_TMP
 
 # Build FS from existing tar, very simple.
 if [ ! -z "$TARF" ]; then
@@ -225,7 +330,9 @@ if [ ! -z "$TARF" ]; then
 	c_info "Unpacking filesystem in device.."
 	run_quiet remote_shell /data/androdeb/device-unpack
 
-	do_cleanup; all_done_banner; exit 0
+	do_cleanup
+	all_done_banner
+	exit 0
 fi
 
 PACKAGES+="$DEFAULT_PACKAGES"
@@ -233,11 +340,12 @@ c_info "Using temporary directory: $TDIR"
 
 if [[ $EUID -ne 0 ]]; then c_info "The next stage runs as sudo, please enter password if asked."; fi
 
-ex_files=$(mktemp); echo $EXTRA_FILES > $ex_files
+ex_files=$(mktemp)
+echo $EXTRA_FILES >$ex_files
 
 sudo $spath/buildstrap $ARCH $DISTRO $TDIR $OUT_TMP \
-		"$(make_csv "$PACKAGES")"\
-		$ex_files $INSTALL_BCC $SKIP_DEVICE
+	"$(make_csv "$PACKAGES")" \
+	$ex_files $INSTALL_BCC $SKIP_DEVICE $DEBIAN_URL
 rm $ex_files
 
 # If we only wanted to prepare a rootfs and don't have
@@ -271,7 +379,7 @@ if [[ ! -z ${TARDIR+x} ]]; then
 	else
 		remote_shell /data/androdeb/build-debian-tar
 		remote_pull /data/androdeb/androdeb-fs.tgz $FNAME_UZ
-		remote_shell rm /data/androdeb/androdeb-fs.tgz;
+		remote_shell rm /data/androdeb/androdeb-fs.tgz
 	fi
 	zip -r $FNAME $FNAME_UZ
 	popd
