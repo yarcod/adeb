@@ -1,21 +1,24 @@
 do_mounts()
 {
 	mount --bind /proc debian/proc/ > /dev/null
-
 	mount --bind /dev debian/dev/ > /dev/null
 	mount --bind /dev/pts debian/dev/pts > /dev/null
-
 	mount --bind /sys debian/sys/ > /dev/null
-	mount --bind /sys/fs/bpf/ debian/sys/fs/bpf/ > /dev/null
-	mount --bind /sys/kernel/debug/ debian/sys/kernel/debug/ > /dev/null
-  mount --bind /sys/kernel/tracing/ debian/sys/kernel/tracing/
 
-	# Fix up weirdness with debugfs permission changing because of
-	# above mounts.
-	chmod 0777       /sys/kernel/debug > /dev/null
-	chmod 0777 debian/sys/kernel/debug > /dev/null
-	chmod 0777       /sys/kernel/debug/tracing > /dev/null
-	chmod 0777 debian/sys/kernel/debug/tracing > /dev/null
+  if [ -d /sys/fs/bpf/ ]; then
+		mkdir -p debian/sys/fs/bpf/
+		mount --bind /sys/fs/bpf/ debian/sys/fs/bpf/
+	fi
+
+	if [ -d /sys/kernel/debug/ ]; then
+		mkdir -p debian/sys/kernel/debug/
+		mount --bind /sys/kernel/debug/ debian/sys/kernel/debug/
+	fi
+
+	if [ -d /sys/kernel/tracing/ ]; then
+		mkdir -p debian/sys/kernel/tracing/
+		mount --bind /sys/kernel/tracing/ debian/sys/kernel/tracing/
+	fi
 
 	# Mount Android partitions
 	if [ -d /d/ ]; then
@@ -42,6 +45,10 @@ do_mounts()
     mount --bind /dev/binderfs/ debian/dev/binderfs
   fi
 
+  if [ -d /apex/com.android.art/ ]; then
+		mkdir -p debian/apex/com.android.art
+		mount --bind /apex/com.android.art debian/apex/com.android.art
+	fi
 }
 
 mount | grep debian > /dev/null
