@@ -98,6 +98,11 @@ while [[ $# -gt 0 ]]; do
 		source $spath/packages/bcc
 		shift || true
 		;;
+	--bpftrace)
+		FULL=1
+		source $spath/packages/bpftrace
+		shift || true
+		;;
 	--tempdir)
 		TDIR="$2"
 		shift || true
