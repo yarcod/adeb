@@ -11,11 +11,12 @@ OUT_TMP=$4
 PACKAGES=$5
 EXTRA_FILES="$(cat $6)"
 INSTALL_BCC=$7
-SKIP_DEVICE=$8		# Skip any device-specific stages
+SKIP_DEVICE=$8 # Skip any device-specific stages
 VARIANT="--variant=minbase"
+REPO_URL=$9
 
 time qemu-debootstrap --arch $ARCH --include=$PACKAGES $VARIANT \
-	$DISTRO $OUT_TMP http://ftp.us.debian.org/debian/
+	$DISTRO $OUT_TMP $REPO_URL
 
 # Some reason debootstrap leaves these mounted
 umount $OUT_TMP/proc/sys/fs/binfmt_misc || true
@@ -49,7 +50,7 @@ rm -rf $OUT_TMP/usr/lib/share/man/*
 
 # Fix apt-get issue: Android requires _apt user to be in the
 # AID_INET group which is also android specific.
-grep -ri _apt:x:100:65534 $OUT_TMP/etc/passwd > /dev/null 2>&1
+grep -ri _apt:x:100:65534 $OUT_TMP/etc/passwd >/dev/null 2>&1
 if [ $? -ne 0 ]; then
 	c_warning "_apt user cannot be added to AID_INET group"
 else
@@ -57,7 +58,7 @@ else
 fi
 
 # Add a default DNS server
-echo "nameserver 4.2.2.2" > $OUT_TMP/etc/resolv.conf
+echo "nameserver 4.2.2.2" >$OUT_TMP/etc/resolv.conf
 
 # Clone BCC if needed
 if [ $INSTALL_BCC -eq 1 ]; then
