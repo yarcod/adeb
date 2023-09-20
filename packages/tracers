@@ -2,4 +2,6 @@ PACKAGES+="\
 linux-perf
 trace-cmd
 strace
+sshfs
+bpfcc-tools
 "

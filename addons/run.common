@@ -20,6 +20,10 @@ do_mounts()
 		mount --bind /sys/kernel/tracing/ debian/sys/kernel/tracing/
 	fi
 
+	if [ -d /sys/kernel/debug/tracing ]; then
+		mount --bind /sys/kernel/debug/tracing/ debian/sys/kernel/debug/tracing/
+	fi
+
 	# Mount Android partitions
 	if [ -d /d/ ]; then
 		if [ ! -d debian/d ]; then ln -s /sys/kernel/debug debian/d; fi
@@ -53,3 +57,6 @@ do_mounts()
 
 mount | grep debian > /dev/null
 if [ $? -ne 0 ]; then do_mounts; fi
+
+# unset any PRELOAD in Android environment, otherwise Linux linker cann't handle it.
+unset LD_PRELOAD
