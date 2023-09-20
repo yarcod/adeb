@@ -34,10 +34,12 @@ usage() {
 	c_info ""
 	c_info "	  --build-image	Build an ext4 .img with the base image and BCC (useful for Qemu)"
 	c_info ""
+	c_info "	  --mirror	Specific the mirror for downloading debian images"
+	c_info ""
 	c_info "	** Folowing are misc build options **"
 	c_info "	  --tempdir	Use a specific temporary directory for build operation"
 	c_info "	  --arch		Specify an ARCH to build for (default arm64)"
-	c_info "	  --distro	Debian distro to base on (default is buster)"
+	c_info "	  --distro	Debian distro to base on (default is bullseye)"
 	c_info ""
 	c_info "	** Folowing are the options for BCC **"
 	c_info "	  --bcc		Build and install BCC onto the device, from source"
@@ -56,5 +58,3 @@ usage() {
 	c_info "	--debug		Debug all execution."
 	exit 1
 }
-
-
