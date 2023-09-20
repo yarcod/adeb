@@ -16,10 +16,11 @@ DISTRO=bullseye
 ARCH=arm64
 ADB="adb"
 REMOTE="adb"
-FULL=0        # Default to a minimal install
-DOWNLOAD=1    # Default to downloading from web
-SKIP_DEVICE=0 # Skip device preparation
-INSTALL_BCC=0 # Decide if BCC is to be installed
+FULL=0             # Default to a minimal install
+DOWNLOAD=1         # Default to downloading from web
+SKIP_DEVICE=0      # Skip device preparation
+INSTALL_BCC=0      # Decide if BCC is to be installed
+INSTALL_BPFTRACE=0 # Decide if BPF Trace is to be installed
 DEBIAN_URL=http://ftp.us.debian.org/debian/
 
 # Default packages
@@ -345,7 +346,7 @@ echo $EXTRA_FILES >$ex_files
 
 sudo $spath/buildstrap $ARCH $DISTRO $TDIR $OUT_TMP \
 	"$(make_csv "$PACKAGES")" \
-	$ex_files $INSTALL_BCC $SKIP_DEVICE $DEBIAN_URL
+	$ex_files $INSTALL_BCC $SKIP_DEVICE $INSTALL_BPFTRACE $DEBIAN_URL
 rm $ex_files
 
 # If we only wanted to prepare a rootfs and don't have
