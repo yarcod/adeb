@@ -13,10 +13,10 @@ EXTRA_FILES="$(cat $6)"
 INSTALL_BCC=$7
 SKIP_DEVICE=$8 # Skip any device-specific stages
 INSTALL_BPFTRACE=$9
+REPO_URL=${10}
 VARIANT="--variant=minbase"
-REPO_URL=$10
 
-time qemu-debootstrap --arch $ARCH --include=$PACKAGES $VARIANT \
+time debootstrap --arch $ARCH --include=$PACKAGES $VARIANT \
 	$DISTRO $OUT_TMP $REPO_URL
 
 # Some reason debootstrap leaves these mounted
@@ -77,7 +77,7 @@ if [ $INSTALL_BPFTRACE -eq 1 ]; then
 	pushd $TDIR/debian/bpftrace-master
 	git checkout 766787a67f97fb4e9312ab38b9f4dc89001f0c51 --recurse-submodules
 	popd
-	cp $spath/bpftrace/build-bpftrace.sh $TDIR/debian/bpftrace-master/
+	cp $spath/bcc/build-bpftrace.sh $TDIR/debian/bpftrace-master/
 	chroot $OUT_TMP /bpftrace-master/build-bpftrace.sh
 fi
 
