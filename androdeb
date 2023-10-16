@@ -254,7 +254,9 @@ fi
 
 function do_cleanup() {
 	rm -rf $TDIR/*
-	if [ $MKTEMP -eq 1 ]; then rm -rf $TDIR; fi
+	if [ $MKTEMP -eq 1 ]; then
+		rm -rf $TDIR
+	fi
 }
 
 function all_done_banner() {
@@ -262,11 +264,9 @@ function all_done_banner() {
 }
 
 function detect_repo_url() {
-	ADEB_REPO_URL=$(cd $spath && git config -l | grep -m1 remote | grep url | sed -e "s/.*url=//" \
-		-e "s/.*@//" \
-		-e "s/https:\/\///" \
-		-e "s/:/\//" \
-		-e "s/\.git$//")"/"
+	ADEB_REPO_URL=$(
+		cd $spath && git config -l | grep remote | awk -F= '/remote.origin.url/ { sub("git@", "https://", $2); sub(":", "/", $2); sub(".git$", "", $2); print $2 }'
+	)"/"
 	c_info "Detected URL: $ADEB_REPO_URL"
 }
 
