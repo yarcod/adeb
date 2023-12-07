@@ -11,17 +11,12 @@ do_mounts()
 	fi
 
 	if [ -d /sys/kernel/debug/ ]; then
+    # If the directory is empty, we can suspect that debugfs is not mounted
+    if [ -z $(ls -A /sys/kernel/debug/) ]; then
+      mount -t debugfs debugfs /sys/kernel/debug/
+    fi
 		mkdir -p debian/sys/kernel/debug/
 		mount --bind /sys/kernel/debug/ debian/sys/kernel/debug/
-	fi
-
-	if [ -d /sys/kernel/tracing/ ]; then
-		mkdir -p debian/sys/kernel/tracing/
-		mount --bind /sys/kernel/tracing/ debian/sys/kernel/tracing/
-	fi
-
-	if [ -d /sys/kernel/debug/tracing ]; then
-		mount --bind /sys/kernel/debug/tracing/ debian/sys/kernel/debug/tracing/
 	fi
 
 	# Mount Android partitions
