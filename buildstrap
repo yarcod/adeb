@@ -29,6 +29,7 @@ chroot $OUT_TMP ln -s /bin/bash /bin/sh || true
 cp $spath/addons/bashrc $OUT_TMP/.bashrc
 cp $spath/addons/bashrc.common $OUT_TMP/.bashrc.common
 cp $spath/addons/bashrc.silent $OUT_TMP/.bashrc.silent
+cp $spath/addons/inputrc $OUT_TMP/.inputrc
 cp $spath/addons/get_kvers.sh $OUT_TMP/
 
 for f in $EXTRA_FILES; do
@@ -63,20 +64,15 @@ echo "nameserver 9.9.9.9" >$OUT_TMP/etc/resolv.conf
 
 # Clone BCC if needed
 if [ $INSTALL_BCC -eq 1 ]; then
-	git clone https://github.com/iovisor/bcc.git $TDIR/debian/bcc-master
-	pushd $TDIR/debian/bcc-master
-	git checkout 5657c7dce897e600fb9dc7fceb56ed5ffdd6d1ca --recurse-submodules
-	popd
+	git clone --recursive https://github.com/iovisor/bcc.git $TDIR/debian/bcc-master
 	cp $spath/bcc/build-bcc.sh $TDIR/debian/bcc-master/
+	chroot $OUT_TMP pip install --upgrade setuptools
 	chroot $OUT_TMP /bcc-master/build-bcc.sh
 fi
 
 # Clone bpftrace if needed
 if [ $INSTALL_BPFTRACE -eq 1 ]; then
 	git clone --recursive https://github.com/iovisor/bpftrace.git $TDIR/debian/bpftrace-master
-	pushd $TDIR/debian/bpftrace-master
-	git checkout 766787a67f97fb4e9312ab38b9f4dc89001f0c51 --recurse-submodules
-	popd
 	cp $spath/bcc/build-bpftrace.sh $TDIR/debian/bpftrace-master/
 	chroot $OUT_TMP /bpftrace-master/build-bpftrace.sh
 fi

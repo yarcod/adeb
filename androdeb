@@ -25,7 +25,7 @@ DEBIAN_URL=http://ftp.us.debian.org/debian/
 
 # Default packages
 PACKAGES=""
-DEFAULT_PACKAGES="bash ca-certificates apt net-tools iputils-ping procps vim"
+DEFAULT_PACKAGES="bash ca-certificates apt net-tools iputils-ping procps python3-pip vim zip"
 
 EXTRA_FILES="none"
 
@@ -93,13 +93,13 @@ while [[ $# -gt 0 ]]; do
 		shift || true
 		shift || true
 		;;
-	--bcc)
-		FULL=1
+	--bcc-master)
+		INSTALL_BCC=1
 		source $spath/packages/bcc
 		shift || true
 		;;
-	--bpftrace)
-		FULL=1
+	--bpftrace-master)
+		INSTALL_BPFTRACE=1
 		source $spath/packages/bpftrace
 		shift || true
 		;;

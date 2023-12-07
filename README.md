@@ -129,9 +129,9 @@ adeb prepare --full --build
 
 ### Build/install a base image with BCC:
 ```
-adeb prepare --bcc --build
+adeb prepare --bcc-master --build
 ```
-Note: BCC is built from source.
+Note: BCC is included by default with `--full`, but using --bcc-master will check out the master branch of the project and build it from source
 
 ### Extract the FS from the device, after its prepared:
 ```

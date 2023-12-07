@@ -1,7 +1,7 @@
 PACKAGES+="\
 git
-clang-11
 gcc
+clang-13
 libtool
 autoconf
 make
